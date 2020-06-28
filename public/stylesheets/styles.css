@@ -1,0 +1,49 @@
+html {
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+}
+h1 {
+  /* font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; */
+  text-align: center;
+}
+
+table {
+  margin: auto;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+td {
+  border: 7px solid blue;
+  margin: 0;
+  height: 80px;
+  width: 80px;
+}
+
+input {
+  font-size: 30px;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.board, .player {
+  min-width: 50%;
+}
+
+.player {
+  border: 7px solid blue;
+  margin: 0;
+  padding: 20px;
+  font-size: 40px;
+}
+
+.cell{
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 50px;
+  color: red;
+  text-align: center;
+}
