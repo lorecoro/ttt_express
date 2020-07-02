@@ -4,13 +4,15 @@
   "description": "tic tac toe board made with express+mongo",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js localhost 8080",
+    "start": "nodemon index.js localhost 8080",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Lorenzo Coronati",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
+    "mongodb": "^3.5.9",
+    "mongoose": "^5.9.20",
     "pug": "^3.0.0"
   }
 }
