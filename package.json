@@ -4,7 +4,7 @@
   "description": "tic tac toe board made with express+mongo",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js localhost 8080",
+    "start": "node index.js localhost 8080",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Lorenzo Coronati",
