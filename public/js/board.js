@@ -2,7 +2,7 @@ const columns = 5;
 const rows = 5;
 let end = false;
 
-const buildrow = (x, y) => {
+const buildRow = (x, y) => {
     let row = '<tr>';
     for (let i = 1; i <= x; i++) {
         row += `<td data-x="${i}" data-y="${y}" class="cell"></td>`;
@@ -11,27 +11,73 @@ const buildrow = (x, y) => {
     return row;
 }
 
-const buildtable = (x, y) => {
+const buildTable = (x, y) => {
     let table = '<table id="table">';
     for (let i = y; i >= 1; i--) {
-        table += buildrow(x, i);
+        table += buildRow(x, i);
     }
     table += '</table>';
     return table;
 }
 
-const resetBoard = () => {
+const resetBoard = (xo) => {
     const board = document.getElementById("board");
-    board.innerHTML = buildtable(columns, rows);
+    board.innerHTML = buildTable(columns, rows);
     const table = document.getElementById("table");
     table.addEventListener("mousedown", clickEvent);
     const messagenode = document.getElementById("message");
     messagenode.innerHTML = '';
     end = false;
+    boardToMatrix(xo);
 }
 
-const checkWinner = () => {
-    let message = '';
+const fillBoard = (matrix) => {
+    const board = document.getElementById("board");
+    board.innerHTML = buildTable(columns, rows);
+    const table = document.getElementById("table");
+    table.addEventListener("mousedown", clickEvent);
+    
+    // Cycle thru all the td's and restore the values from the matrix.
+    const cells = document.getElementsByTagName('td');
+    let x, y;
+    for (let i = 0; i < cells.length; i++) {
+        if (cells[i].hasAttribute('data-x') && cells[i].className === 'cell') {
+            x = parseInt(cells[i].dataset.x);
+            y = parseInt(cells[i].dataset.y);
+            if (matrix[x] && matrix[x][y]) {
+                cells[i].innerText = matrix[x][y];
+            }
+        }
+    }
+}
+
+const storeMatrix = (xo, matrix) => {
+    const request = new XMLHttpRequest();
+    request.open("POST", 'http://localhost:8080/api/board', true);
+    request.setRequestHeader('Content-Type', 'application/json');
+    const json = {
+        player: xo,
+        matrix: matrix
+    }
+    request.send(JSON.stringify(json));
+}
+
+const retrieveMatrix = () => {
+    const request = new XMLHttpRequest();
+    request.open("GET", 'http://localhost:8080/api/board', true);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.onreadystatechange = function() { 
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            const data = JSON.parse(this.response)
+            fillBoard(data.matrix);
+            const currentPlayer = document.getElementById("current-player");
+            currentPlayer.innerHTML = (data.player === 'x' ? 'o' : 'x');
+        }
+    }
+    request.send();
+}
+
+const boardToMatrix = (xo) => {
     // Create a matrix where to store the values.
     let matrix = [];
     for (let i = 1; i <= rows; i++) {
@@ -40,10 +86,9 @@ const checkWinner = () => {
             matrix[i][j] = '';
         }
     }
-
+    
     // Cycle thru all the td's and store the values in the matrix.
     const cells = document.getElementsByTagName('td');
-    let filled = 0;
     let x, y, value;
     for (let i = 0; i < cells.length; i++) {
         if (cells[i].hasAttribute('data-x')) {
@@ -51,9 +96,32 @@ const checkWinner = () => {
             y = cells[i].dataset.y;
             value = cells[i].innerText;
             matrix[x][y] = value;
-            if (value !== '') filled++;
         }
     }
+    
+    // Store the status of the board in the database.
+    storeMatrix(xo, matrix);
+    
+    return matrix;
+}
+
+const checkFilledBoard = (matrix) => {
+    let filled = true;
+    for (let i = 1; i <= rows; i++) {
+        for (let j = 1; j <= columns; j++) {
+            if (matrix[i][j] === '') {
+                filled = false;
+                continue;
+            }
+        }
+    }
+    return filled;
+}
+
+const checkWinner = (xo) => {
+    let message = '';
+
+    const matrix = boardToMatrix(xo);
 
     // Check the rows.
     for (let j = 1; j <= columns; j++) {
@@ -122,7 +190,7 @@ const checkWinner = () => {
         }
     }
     if (message !== '') return message;
-    if (filled === rows*columns) return "Game over - No winner";
+    if (checkFilledBoard(matrix)) return "Game over - No winner";
     return '';
 }
 
@@ -134,14 +202,16 @@ const clickEvent = (event) => {
     const currentPlayer = document.getElementById("current-player");
     let xo = currentPlayer.innerText;
     event.target.innerHTML = xo;
-    xo = (xo === "x") ? "o" : "x";
-    currentPlayer.innerText = xo;
-    const message = checkWinner();
+    const message = checkWinner(xo);
     if (message !== '') {
         const messagenode = document.getElementById("message");
         messagenode.innerHTML = message;
         alert(`Player ${(xo === "x" ? 2 : 1)} won!`);
         end = true;
+    }
+    else {
+        xo = (xo === "x") ? "o" : "x";
+        currentPlayer.innerText = xo;    
     };
 }
 
@@ -149,11 +219,13 @@ const initializeCode = () => {
     console.log("Initializing");
     const button = document.getElementById("reset");
     button.addEventListener("click", event => {
-      resetBoard();
-      event.stopPropagation();
+        const currentPlayer = document.getElementById("current-player");
+        let xo = currentPlayer.innerText;
+        resetBoard(xo);
+        event.stopPropagation();
     });
 }
 
 initializeCode();
-resetBoard();
-
+// Retrieve the status of the board from the database.
+retrieveMatrix();

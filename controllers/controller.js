@@ -1,31 +1,37 @@
 const gameModel = require('../models/game');
+const async = require('async');
 
-exports.store = async (req, res, next) => {
-    console.log('controller');
-    gameModel.deleteMany({}, (err) => {
+exports.store = (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    async.series({
+        delete: (callback) => {
+            gameModel.deleteMany({}, callback);
+        },
+        create: () => {
+            const gameInstance = new gameModel({
+                player: req.body.player,
+                matrix: req.body.matrix
+            });
+            gameInstance.save((err) => {
+                if (err) {
+                    console.log(err);
+                    return handleError(err);
+                }
+            });
+        } 
+    }, (err) => {
         if (err) throw err;
-    })
-    .then(async () => {
-        const gameInstance = new gameModel({
-            player: 'o',
-            matrix: [['4','5','6'], ['7','8','9']]
-        });
-        gameInstance.save((err) => {
-            if (err) return handleError(err);
-            console.log('doc stored');
-            return;
-        });
     });
+    res.send('ok');
 };
  
-exports.retrieve = async (req, res, next) => {
-    console.log('retr');
-    gameModel.find({}).exec((err, game) => {
-        console.log('in');
-        if (err) {
-            console.log(err);
-            return next(err)
-        };
-        console.log(game);
+exports.retrieve = (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    async.series({
+        found: (callback) => {
+            gameModel.find({}, callback);
+        }
+    }, (err, results) => {
+        res.json(results.found[0]);
     });
 };
