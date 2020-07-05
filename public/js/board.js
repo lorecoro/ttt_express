@@ -53,7 +53,7 @@ const fillBoard = (matrix) => {
 
 const storeMatrix = (xo, matrix) => {
     const request = new XMLHttpRequest();
-    request.open("POST", 'http://localhost:8080/api/board', true);
+    request.open("POST", '/api/board', true);
     request.setRequestHeader('Content-Type', 'application/json');
     const json = {
         player: xo,
@@ -64,7 +64,7 @@ const storeMatrix = (xo, matrix) => {
 
 const retrieveMatrix = () => {
     const request = new XMLHttpRequest();
-    request.open("GET", 'http://localhost:8080/api/board', true);
+    request.open("GET", '/api/board', true);
     request.setRequestHeader('Content-Type', 'application/json');
     request.onreadystatechange = function() { 
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
