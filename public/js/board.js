@@ -220,8 +220,8 @@ const initializeCode = () => {
     const button = document.getElementById("reset");
     button.addEventListener("click", event => {
         const currentPlayer = document.getElementById("current-player");
-        let xo = currentPlayer.innerText;
-        resetBoard(xo);
+        currentPlayer.innerText = 'x';
+        resetBoard('x');
         event.stopPropagation();
     });
 }
