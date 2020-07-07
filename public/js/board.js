@@ -206,7 +206,7 @@ const clickEvent = (event) => {
     if (message !== '') {
         const messagenode = document.getElementById("message");
         messagenode.innerHTML = message;
-        alert(`Player ${(xo === "x" ? 2 : 1)} won!`);
+        alert(`Player ${(xo === "x" ? 1 : 2)} won!`);
         end = true;
     }
     else {
