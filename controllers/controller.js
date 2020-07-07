@@ -10,7 +10,8 @@ exports.store = (req, res) => {
         create: () => {
             const gameInstance = new gameModel({
                 player: req.body.player,
-                matrix: req.body.matrix
+                matrix: req.body.matrix,
+                status: req.body.status,
             });
             gameInstance.save((err) => {
                 if (err) {

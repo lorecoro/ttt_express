@@ -28,7 +28,7 @@ const resetBoard = (xo) => {
     const messagenode = document.getElementById("message");
     messagenode.innerHTML = '';
     end = false;
-    boardToMatrix(xo);
+    boardToMatrix(xo, 'new');
 }
 
 const fillBoard = (matrix) => {
@@ -51,13 +51,14 @@ const fillBoard = (matrix) => {
     }
 }
 
-const storeMatrix = (xo, matrix) => {
+const storeMatrix = (xo, matrix, status) => {
     const request = new XMLHttpRequest();
     request.open("POST", '/api/board', true);
     request.setRequestHeader('Content-Type', 'application/json');
     const json = {
         player: xo,
-        matrix: matrix
+        matrix: matrix,
+        status: status,
     }
     request.send(JSON.stringify(json));
 }
@@ -70,14 +71,19 @@ const retrieveMatrix = () => {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             const data = JSON.parse(this.response)
             fillBoard(data.matrix);
-            const currentPlayer = document.getElementById("current-player");
-            currentPlayer.innerHTML = (data.player === 'x' ? 'o' : 'x');
+            if (data.status === 'over') {
+                end = true;
+            }
+            if (data.status === 'ongoing') {
+                const currentPlayer = document.getElementById("current-player");
+                currentPlayer.innerHTML = (data.player === 'x' ? 'o' : 'x');
+            }
         }
     }
     request.send();
 }
 
-const boardToMatrix = (xo) => {
+const boardToMatrix = (xo, status) => {
     // Create a matrix where to store the values.
     let matrix = [];
     for (let i = 1; i <= rows; i++) {
@@ -100,7 +106,7 @@ const boardToMatrix = (xo) => {
     }
     
     // Store the status of the board in the database.
-    storeMatrix(xo, matrix);
+    storeMatrix(xo, matrix, status);
     
     return matrix;
 }
@@ -121,7 +127,7 @@ const checkFilledBoard = (matrix) => {
 const checkWinner = (xo) => {
     let message = '';
 
-    const matrix = boardToMatrix(xo);
+    const matrix = boardToMatrix(xo, 'ongoing');
 
     // Check the rows.
     for (let j = 1; j <= columns; j++) {
@@ -140,8 +146,11 @@ const checkWinner = (xo) => {
         }
         if (message !== '') break;
     }
+    if (message !== '') {
+        boardToMatrix(xo, 'over');
+        return message;
+    }
 
-    if (message !== '') return message;
     // Check the columns.
     for (let i = 1; i <= rows; i++) {
         let accumulator = matrix[i][1];
@@ -159,7 +168,10 @@ const checkWinner = (xo) => {
         }
         if (message !== '') break;
     }
-    if (message !== '') return message;
+    if (message !== '') {
+        boardToMatrix(xo, 'over');
+        return message;
+    }
 
     // Check the diagonals.
     for (let i = 1; i <= rows; i++) {
@@ -175,7 +187,11 @@ const checkWinner = (xo) => {
             }
         }
     }
-    if (message !== '') return message;
+    if (message !== '') {
+        boardToMatrix(xo, 'over');
+        return message;
+    }
+
     for (let i = 1; i <= rows; i++) {
         let accumulator = matrix[rows][1];
         if (accumulator !== '') {
@@ -189,12 +205,20 @@ const checkWinner = (xo) => {
             }
         }
     }
-    if (message !== '') return message;
-    if (checkFilledBoard(matrix)) return "Game over - No winner";
+    if (message !== '') {
+        boardToMatrix(xo, 'over');
+        return message;
+    }
+    if (checkFilledBoard(matrix)) {
+        boardToMatrix(xo, 'over');
+        end = true;
+        return "Game over - No winner";
+    }
     return '';
 }
 
 const clickEvent = (event) => {
+    const messagenode = document.getElementById("message");
     // Check if the game has ended already.
     if (end) return;
     // Check if the cell has a value already.
@@ -204,9 +228,8 @@ const clickEvent = (event) => {
     event.target.innerHTML = xo;
     const message = checkWinner(xo);
     if (message !== '') {
-        const messagenode = document.getElementById("message");
         messagenode.innerHTML = message;
-        alert(`Player ${(xo === "x" ? 1 : 2)} won!`);
+        if (end === false) alert(`Player ${(xo === "x" ? 1 : 2)} won!`);
         end = true;
     }
     else {
