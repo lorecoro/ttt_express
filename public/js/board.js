@@ -82,7 +82,7 @@ const retrieveMatrix = () => {
                     currentPlayer.innerHTML = (data.player === 'x' ? 'o' : 'x');
                 }
                 // Store the player.
-                if (sessionStorage.getItem('player') === '') {
+                if (localStorage.getItem('player') === '') {
                     setPlayer();
                 }
             }
@@ -104,7 +104,7 @@ const setPlayer = () => {
                 end = true;
             }
             else {
-                sessionStorage.setItem('player', (data.player));
+                localStorage.setItem('player', (data.player));
                 console.log('player was set to ' + data.player);
             }
         }
@@ -255,7 +255,7 @@ const clickEvent = (event) => {
     // Check if the current player corresponds to the cookie.
     const currentPlayer = document.getElementById("current-player");
     let xo = currentPlayer.innerText;
-    if (xo !== sessionStorage.getItem('player')) return;
+    if (xo !== localStorage.getItem('player')) return;
     // Proceed.
     event.target.innerHTML = xo;
     const message = checkWinner(xo);
@@ -280,11 +280,11 @@ const initializeCode = () => {
         event.stopPropagation();
     });
     // At the first load, reset the player cookie. It will be set with the first retrieveMatrix.
-    if (sessionStorage.hasOwnProperty('player')){
-        document.getElementById('session-player').innerText = sessionStorage.getItem('player');
+    if (localStorage.hasOwnProperty('player')){
+        document.getElementById('session-player').innerText = localStorage.getItem('player');
     }
     else {
-        sessionStorage.setItem('player', '');
+        localStorage.setItem('player', '');
     }
     setInterval(retrieveMatrix, 1000);
 }
