@@ -64,19 +64,48 @@ const storeMatrix = (xo, matrix, status) => {
 }
 
 const retrieveMatrix = () => {
+    if (end === false) {
+        const request = new XMLHttpRequest();
+        request.open("GET", '/api/board', true);
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.onreadystatechange = function() { 
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                const data = JSON.parse(this.response)
+                fillBoard(data.matrix);
+                if (data.status === 'over') {
+                    end = true;
+                    console.log(data.player);
+                    alert(`Player ${(data.player === "x" ? 1 : 2)} won!`);
+                }
+                if (data.status === 'ongoing') {
+                    const currentPlayer = document.getElementById("current-player");
+                    currentPlayer.innerHTML = (data.player === 'x' ? 'o' : 'x');
+                }
+                // Store the player.
+                if (sessionStorage.getItem('player') === '') {
+                    setPlayer();
+                }
+            }
+        }
+        request.send();
+    }
+}
+
+const setPlayer = () => {
     const request = new XMLHttpRequest();
-    request.open("GET", '/api/board', true);
+    request.open("GET", '/api/player', true);
     request.setRequestHeader('Content-Type', 'application/json');
     request.onreadystatechange = function() { 
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            const data = JSON.parse(this.response)
-            fillBoard(data.matrix);
-            if (data.status === 'over') {
+            const data = JSON.parse(this.response);
+            document.getElementById('session-player').innerText = data.player;
+            if (data.player === '') {
+                alert('Two players are playing already. Please try again later.');
                 end = true;
             }
-            if (data.status === 'ongoing') {
-                const currentPlayer = document.getElementById("current-player");
-                currentPlayer.innerHTML = (data.player === 'x' ? 'o' : 'x');
+            else {
+                sessionStorage.setItem('player', (data.player));
+                console.log('player was set to ' + data.player);
             }
         }
     }
@@ -223,13 +252,16 @@ const clickEvent = (event) => {
     if (end) return;
     // Check if the cell has a value already.
     if (event.target.innerText !== '') return;
+    // Check if the current player corresponds to the cookie.
     const currentPlayer = document.getElementById("current-player");
     let xo = currentPlayer.innerText;
+    if (xo !== sessionStorage.getItem('player')) return;
+    // Proceed.
     event.target.innerHTML = xo;
     const message = checkWinner(xo);
     if (message !== '') {
         messagenode.innerHTML = message;
-        if (end === false) alert(`Player ${(xo === "x" ? 1 : 2)} won!`);
+        // if (end === false) alert(`Player ${(xo === "x" ? 1 : 2)} won!`);
         end = true;
     }
     else {
@@ -247,6 +279,14 @@ const initializeCode = () => {
         resetBoard('x');
         event.stopPropagation();
     });
+    // At the first load, reset the player cookie. It will be set with the first retrieveMatrix.
+    if (sessionStorage.hasOwnProperty('player')){
+        document.getElementById('session-player').innerText = sessionStorage.getItem('player');
+    }
+    else {
+        sessionStorage.setItem('player', '');
+    }
+    setInterval(retrieveMatrix, 1000);
 }
 
 initializeCode();

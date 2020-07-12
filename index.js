@@ -7,7 +7,7 @@ const router = require('./routes/api');
 const bodyParser = require('body-parser');
 const uri = "mongodb+srv://mongodb_user:mongodb_password@cluster0.8gcqw.mongodb.net/mongodb_database?retryWrites=true&w=majority";
 
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'DB connection error'));
     
