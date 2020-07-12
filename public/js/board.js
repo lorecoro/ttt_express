@@ -261,7 +261,7 @@ const clickEvent = (event) => {
     const message = checkWinner(xo);
     if (message !== '') {
         messagenode.innerHTML = message;
-        // if (end === false) alert(`Player ${(xo === "x" ? 1 : 2)} won!`);
+        if (end === false) alert(`Player ${(xo === "x" ? 1 : 2)} won!`);
         end = true;
     }
     else {
